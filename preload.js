@@ -1,0 +1,1 @@
+// De momento vacío; punto de entrada para exponer APIs seguras al renderer

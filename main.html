@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>MapScribe</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:;"/>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#111; color:#eee; }
+    header { padding: 12px 16px; background:#1b1b1b; display:flex; gap:12px; align-items:center; }
+    button, input[type="file"] { background:#2a2a2a; color:#eee; border:1px solid #333; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    button:hover { background:#323232; }
+    #stage { position:relative; width:100%; height:calc(100vh - 58px); overflow:auto; }
+    #map { max-width: none; display:block; }
+    .pin {
+      position:absolute; transform: translate(-50%, -100%); 
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid #fff; background:#e74c3c; pointer-events:none;
+      box-shadow: 0 0 0 2px rgba(0,0,0,.4);
+    }
+    .label {
+      position:absolute; transform: translate(-50%, 8px);
+      background:#000; color:#fff; padding:4px 8px; border-radius:6px; 
+      border:1px solid #333; max-width:260px; font-size:12px; pointer-events:none;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .hint { opacity:.7; font-size:12px; margin-left:auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <input id="file" type="file" accept="image/*">
+    <button id="clearPins">Quitar anotaciones</button>
+    <span class="hint">Sube un mapa (imagen). Clic en el mapa para colocar un pin y escribe una nota.</span>
+  </header>
+
+  <div id="stage">
+    <img id="map" alt="map" />
+  </div>
+
+  <script>
+    const file = document.getElementById('file');
+    const stage = document.getElementById('stage');
+    const mapImg = document.getElementById('map');
+    const clearBtn = document.getElementById('clearPins');
+
+    let annotations = []; // {xPct, yPct, text}
+
+    file.addEventListener('change', (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const url = URL.createObjectURL(f);
+      mapImg.src = url;
+      annotations = [];
+      clearPins();
+    });
+
+    function clearPins() {
+      document.querySelectorAll('.pin,.label').forEach(el => el.remove());
+    }
+
+    function placePin(xPct, yPct, text) {
+      // Calcula posición absoluta según tamaño actual de la imagen
+      const rect = mapImg.getBoundingClientRect();
+      const x = rect.left + (xPct * rect.width);
+      const y = rect.top + (yPct * rect.height);
+
+      const pin = document.createElement('div');
+      pin.className = 'pin';
+      pin.style.left = `${x}px`;
+      pin.style.top = `${y}px`;
+
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.style.left = `${x}px`;
+      label.style.top = `${y}px`;
+      label.textContent = text || '';
+
+      document.body.appendChild(pin);
+      document.body.appendChild(label);
+    }
+
+    function redrawPins() {
+      clearPins();
+      const rect = mapImg.getBoundingClientRect();
+      annotations.forEach(a => {
+        const x = rect.left + (a.xPct * rect.width);
+        const y = rect.top + (a.yPct * rect.height);
+
+        const pin = document.createElement('div');
+        pin.className = 'pin';
+        pin.style.left = `${x}px`;
+        pin.style.top = `${y}px`;
+
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.style.left = `${x}px`;
+        label.style.top = `${y}px`;
+        label.textContent = a.text || '';
+
+        document.body.appendChild(pin);
+        document.body.appendChild(label);
+      });
+    }
+
+    // Recolocar pines al redimensionar
+    window.addEventListener('resize', redrawPins);
+
+    stage.addEventListener('click', (e) => {
+      if (!mapImg.src) return;
+
+      const rect = mapImg.getBoundingClientRect();
+      // Ignora clics fuera de la imagen
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
+
+      const xPct = (e.clientX - rect.left) / rect.width;
+      const yPct = (e.clientY - rect.top) / rect.height;
+
+      const text = prompt('Texto de la anotación (opcional):', '');
+      annotations.push({ xPct, yPct, text });
+      placePin(xPct, yPct, text);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      annotations = [];
+      clearPins();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "mapscribe",
+  "version": "0.1.0",
+  "description": "Desktop app to annotate videogame maps with pins, notes and callouts.",
+  "main": "main.js",
+  "author": "Cristian",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^37.2.6"
+  }
+}
