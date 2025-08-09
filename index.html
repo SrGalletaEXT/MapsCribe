@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librería de Juegos</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https:; connect-src 'self' https:;">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: start;
+            justify-items: stretch;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .add-game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-game-card:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .add-icon {
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 300;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .game-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .game-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+        .game-year {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        /* Modal de búsqueda */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-box:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .search-results {
+            display: grid;
+            gap: 15px;
+        }
+
+        .search-result {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .search-result:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .search-result-image {
+            width: 80px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .search-result-year {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+        }
+
+        .search-result-summary {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            opacity: 0.8;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            opacity: 0.7;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.7;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.7);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 12px;
+            display: none;
+        }
+
+        .game-card:hover .remove-btn {
+            display: block;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 0, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Mi Librería de Juegos</h1>
+        <p>Haz clic en el "+" para buscar y agregar nuevos juegos a tu colección</p>
+    </div>
+
+    <div class="games-grid" id="gamesGrid">
+        <!-- Los juegos y el botón + se generan dinámicamente -->
+    </div>
+
+    <!-- Modal de búsqueda -->
+    <div class="modal" id="searchModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Buscar Juegos</h2>
+                <button class="close-btn" onclick="closeSearchModal()">&times;</button>
+            </div>
+            <input type="text" class="search-box" id="searchInput" placeholder="Escribe el nombre del juego..." autocomplete="off" spellcheck="false">
+            <div class="search-results" id="searchResults">
+                <div class="no-results">
+                    Escribe algo para comenzar la búsqueda
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let games = JSON.parse(localStorage.getItem('gamesLibrary')) || [];
+        let searchTimeout;
+        
+        // Configuración de API - cambia esto cuando tengas tu API key
+        const API_CONFIG = {
+            // Para RAWG API (recomendada):
+            RAWG_API_KEY: 'fc645f94aada401899ec0369699d5ef7',
+            USE_RAWG: true // Ahora usamos RAWG con la API key
+        };
+
+        // Renderizar juegos guardados al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM cargado, inicializando aplicación...');
+            renderGames();
+            // Configurar event listeners iniciales
+            setupModalEventListeners();
+        });
+
+        function renderGames() {
+            const grid = document.getElementById('gamesGrid');
+            
+            // Limpiar completamente el grid
+            grid.innerHTML = '';
+
+            // Agregar juegos guardados en orden (izquierda a derecha, arriba a abajo)
+            games.forEach((game, index) => {
+                const gameCard = createGameCard(game, index);
+                grid.appendChild(gameCard);
+            });
+
+            // Siempre agregar un botón + al final
+            const addButton = createAddButton();
+            grid.appendChild(addButton);
+        }
+
+        function createGameCard(game, index) {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            
+            // Crear el botón de eliminar con event listener en lugar de onclick
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.title = 'Eliminar juego';
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeGameById(game.id);
+            });
+            
+            // Crear la imagen
+            const img = document.createElement('img');
+            img.src = game.cover || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDIwMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTgwIiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMSkiLz4KPHRleHQgeD0iMTAwIiB5PSI5MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuNykiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIwLjNlbSI+U2luIGltYWdlbjwvdGV4dD4KPC9zdmc+';
+            img.alt = game.name;
+            img.className = 'game-image';
+            
+            // Crear el contenedor de información
+            const infoDiv = document.createElement('div');
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'game-title';
+            titleDiv.textContent = game.name;
+            
+            const yearDiv = document.createElement('div');
+            yearDiv.className = 'game-year';
+            yearDiv.textContent = game.year || 'Año desconocido';
+            
+            infoDiv.appendChild(titleDiv);
+            infoDiv.appendChild(yearDiv);
+            
+            // Ensamblar la tarjeta
+            card.appendChild(removeBtn);
+            card.appendChild(img);
+            card.appendChild(infoDiv);
+            
+            return card;
+        }
+
+        function createAddButton() {
+            const addCard = document.createElement('div');
+            addCard.className = 'game-card add-game-card';
+            addCard.innerHTML = '<div class="add-icon">+</div>';
+            addCard.addEventListener('click', openSearchModal);
+            return addCard;
+        }
+
+        function openSearchModal() {
+            console.log('Abriendo modal de búsqueda...');
+            const modal = document.getElementById('searchModal');
+            if (modal) {
+                modal.classList.add('show');
+                
+                // Reconfigurar los event listeners cada vez que se abre
+                setupModalEventListeners();
+                
+                // Solución específica para Electron: forzar cambio de contexto
+                const forceElectronFocus = () => {
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput) {
+                        // Primero, enfocar temporalmente otro elemento
+                        const tempButton = document.createElement('button');
+                        tempButton.style.position = 'absolute';
+                        tempButton.style.left = '-9999px';
+                        tempButton.style.opacity = '0';
+                        document.body.appendChild(tempButton);
+                        
+                        // Enfocar el elemento temporal
+                        tempButton.focus();
+                        
+                        // Después de un frame, enfocar el input real
+                        requestAnimationFrame(() => {
+                            searchInput.focus();
+                            searchInput.select();
+                            
+                            // Limpiar el elemento temporal
+                            document.body.removeChild(tempButton);
+                            
+                            console.log('Foco forzado aplicado (Electron fix)');
+                            
+                            // Verificación final
+                            setTimeout(() => {
+                                if (document.activeElement !== searchInput) {
+                                    console.log('Aplicando foco directo final...');
+                                    searchInput.focus();
+                                    
+                                    // Si aún no funciona, intentar click programático
+                                    setTimeout(() => {
+                                        if (document.activeElement !== searchInput) {
+                                            searchInput.click();
+                                            searchInput.focus();
+                                        }
+                                    }, 100);
+                                }
+                            }, 100);
+                        });
+                    }
+                };
+                
+                // Aplicar la solución después de que el modal esté visible
+                setTimeout(forceElectronFocus, 100);
+                
+                console.log('Modal abierto correctamente');
+            } else {
+                console.error('No se encontró el modal de búsqueda');
+            }
+        }
+
+        function closeSearchModal() {
+            document.getElementById('searchModal').classList.remove('show');
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '<div class="no-results">Escribe algo para comenzar la búsqueda</div>';
+        }
+
+        // Función para configurar los event listeners del modal
+        function setupModalEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            
+            if (searchInput) {
+                // Limpiar eventos anteriores clonando el elemento
+                const newSearchInput = searchInput.cloneNode(true);
+                searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+                
+                console.log('Configurando event listeners del modal...');
+                
+                // Agregar el event listener de búsqueda
+                newSearchInput.addEventListener('input', (e) => {
+                    console.log('Input detectado:', e.target.value);
+                    clearTimeout(searchTimeout);
+                    const query = e.target.value.trim();
+                    
+                    if (query.length < 2) {
+                        document.getElementById('searchResults').innerHTML = '<div class="no-results">Escribe al menos 2 caracteres</div>';
+                        return;
+                    }
+
+                    document.getElementById('searchResults').innerHTML = '<div class="loading">Buscando juegos...</div>';
+
+                    searchTimeout = setTimeout(() => {
+                        searchGames(query);
+                    }, 500);
+                });
+                
+                // Agregar event listener para el foco
+                newSearchInput.addEventListener('focus', () => {
+                    console.log('Input enfocado correctamente');
+                });
+                
+                console.log('Event listeners configurados correctamente');
+            } else {
+                console.error('No se encontró el input de búsqueda');
+            }
+        }
+
+        async function searchGames(query) {
+            try {
+                console.log('Buscando:', query);
+                
+                if (API_CONFIG.USE_RAWG && API_CONFIG.RAWG_API_KEY) {
+                    // Usar RAWG API con clave
+                    const response = await fetch(`https://api.rawg.io/api/games?key=${API_CONFIG.RAWG_API_KEY}&search=${encodeURIComponent(query)}&page_size=10`);
+                    const data = await response.json();
+                    displaySearchResults(data.results || []);
+                } else {
+                    // Usar API alternativa sin clave (FreeToGame)
+                    const response = await fetch(`https://www.freetogame.com/api/games`);
+                    const allGames = await response.json();
+                    
+                    // Filtrar juegos que coincidan con la búsqueda
+                    const filteredGames = allGames.filter(game => 
+                        game.title.toLowerCase().includes(query.toLowerCase()) ||
+                        game.short_description.toLowerCase().includes(query.toLowerCase())
+                    ).slice(0, 10);
+                    
+                    // Convertir al formato esperado
+                    const formattedGames = filteredGames.map(game => ({
+                        id: game.id,
+                        name: game.title,
+                        background_image: game.thumbnail,
+                        released: null,
+                        platforms: [{ platform: { name: game.platform } }]
+                    }));
+                    
+                    console.log('Resultados encontrados:', formattedGames.length);
+                    displaySearchResults(formattedGames);
+                    
+                    // Mostrar mensaje informativo si no hay resultados
+                    if (filteredGames.length === 0) {
+                        setTimeout(() => {
+                            const resultsContainer = document.getElementById('searchResults');
+                            resultsContainer.innerHTML = '<div class="no-results" style="color: #f39c12;">📍 Usando API de juegos gratuitos. Para mejores resultados, obtén una API key de RAWG.</div>';
+                        }, 100);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error al buscar juegos:', error);
+                
+                // Fallback: crear algunos juegos de ejemplo
+                const exampleGames = [
+                    {
+                        id: Date.now(),
+                        name: `${query} (Ejemplo)`,
+                        background_image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDIwMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMzQ0OTVlIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iOTAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5KdWVnbyBkZSBlamVtcGxvPC90ZXh0Pgo8L3N2Zz4=',
+                        released: '2024-01-01',
+                        platforms: [{ platform: { name: 'PC' } }]
+                    }
+                ];
+                
+                displaySearchResults(exampleGames);
+                
+                setTimeout(() => {
+                    const resultsContainer = document.getElementById('searchResults');
+                    resultsContainer.innerHTML = '<div class="no-results" style="color: #e74c3c;">⚠️ Error de conexión. Mostrando ejemplo. Configura una API key para búsquedas reales.</div>' + resultsContainer.innerHTML;
+                }, 100);
+            }
+        }
+
+        function displaySearchResults(results) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">No se encontraron juegos</div>';
+                return;
+            }
+
+            resultsContainer.innerHTML = '';
+            
+            results.forEach(game => {
+                const resultElement = document.createElement('div');
+                resultElement.className = 'search-result';
+                resultElement.onclick = () => addGame(game);
+                
+                const releaseYear = game.released ? new Date(game.released).getFullYear() : '';
+                
+                resultElement.innerHTML = `
+                    <img src="${game.background_image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgODAgMTAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iMTAwIiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMSkiLz4KPHRleHQgeD0iNDAiIHk9IjUwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC43KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pgo8L3N2Zz4='}" 
+                         alt="${game.name}" class="search-result-image">
+                    <div class="search-result-info">
+                        <div class="search-result-title">${game.name}</div>
+                        <div class="search-result-year">${releaseYear}</div>
+                        <div class="search-result-summary">${game.platforms ? game.platforms.map(p => p.platform.name).slice(0,3).join(', ') : 'Plataformas no especificadas'}</div>
+                    </div>
+                `;
+                
+                resultsContainer.appendChild(resultElement);
+            });
+        }
+
+        function addGame(gameData) {
+            const game = {
+                id: gameData.id,
+                name: gameData.name,
+                cover: gameData.background_image,
+                year: gameData.released ? new Date(gameData.released).getFullYear() : null
+            };
+
+            // Verificar si el juego ya está en la librería
+            if (games.some(g => g.id === game.id)) {
+                alert('Este juego ya está en tu librería');
+                return;
+            }
+
+            // Agregar el juego al final del array (mantendrá el orden izquierda-derecha, arriba-abajo)
+            games.push(game);
+            localStorage.setItem('gamesLibrary', JSON.stringify(games));
+            
+            console.log('Juego agregado:', game.name);
+            
+            // Re-renderizar para mostrar el nuevo orden
+            renderGames();
+            closeSearchModal();
+        }
+
+        function removeGameById(gameId) {
+            if (confirm('¿Estás seguro de que quieres eliminar este juego de tu librería?')) {
+                console.log('Eliminando juego con ID:', gameId);
+                
+                // Encontrar el índice del juego por su ID
+                const gameIndex = games.findIndex(game => game.id === gameId);
+                
+                if (gameIndex !== -1) {
+                    games.splice(gameIndex, 1);
+                    localStorage.setItem('gamesLibrary', JSON.stringify(games));
+                    console.log('Juego eliminado. Juegos restantes:', games.length);
+                    
+                    // Re-renderizar la cuadrícula
+                    renderGames();
+                } else {
+                    console.error('No se encontró el juego con ID:', gameId);
+                }
+            }
+        }
+
+        // Mantener la función original por compatibilidad (aunque ya no se usa)
+        function removeGame(index) {
+            if (confirm('¿Estás seguro de que quieres eliminar este juego de tu librería?')) {
+                games.splice(index, 1);
+                localStorage.setItem('gamesLibrary', JSON.stringify(games));
+                renderGames();
+            }
+        }
+
+
+
+        // Cerrar modal al hacer clic fuera y manejar foco
+        document.getElementById('searchModal').addEventListener('click', (e) => {
+            if (e.target.id === 'searchModal') {
+                closeSearchModal();
+            } else {
+                // Si hacen clic dentro del modal, aplicar el fix de Electron
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput && !searchInput.contains(e.target)) {
+                    e.preventDefault();
+                    
+                    // Aplicar el mismo fix que en openModal
+                    const tempButton = document.createElement('button');
+                    tempButton.style.position = 'absolute';
+                    tempButton.style.left = '-9999px';
+                    tempButton.style.opacity = '0';
+                    document.body.appendChild(tempButton);
+                    
+                    tempButton.focus();
+                    
+                    requestAnimationFrame(() => {
+                        searchInput.focus();
+                        searchInput.select();
+                        document.body.removeChild(tempButton);
+                        console.log('Foco restaurado via click');
+                    });
+                }
+            }
+        });
+        
+        // Capturar todas las teclas cuando el modal está abierto
+        document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('searchModal');
+            const searchInput = document.getElementById('searchInput');
+            
+            if (modal && modal.classList.contains('show')) {
+                // Si presionan ESC, cerrar
+                if (e.key === 'Escape') {
+                    closeSearchModal();
+                    return;
+                }
+                
+                // Si el input no tiene foco y presionan una tecla alfanumérica, enfocarlo
+                if (document.activeElement !== searchInput && e.key.length === 1) {
+                    e.preventDefault();
+                    searchInput.focus();
+                    searchInput.value = e.key;
+                    
+                    // Disparar evento input manualmente
+                    const inputEvent = new Event('input', { bubbles: true });
+                    searchInput.dispatchEvent(inputEvent);
+                    
+                    console.log('Foco forzado via teclado');
+                }
+            }
+        });
+
+        // Sistema simplificado de foco
+        function ensureSearchInputFocus() {
+            const modal = document.getElementById('searchModal');
+            const searchInput = document.getElementById('searchInput');
+            
+            if (modal && modal.classList.contains('show') && searchInput) {
+                searchInput.focus();
+            }
+        }
+
+        // Observer para detectar cuando el modal se hace visible
+        const modalObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const modal = mutation.target;
+                    if (modal.classList.contains('show')) {
+                        // El modal se acaba de mostrar, enfocar el input
+                        setTimeout(() => {
+                            const searchInput = document.getElementById('searchInput');
+                            if (searchInput) {
+                                searchInput.focus();
+                                console.log('Foco aplicado via observer');
+                            }
+                        }, 100);
+                    }
+                }
+            });
+        });
+
+        // Configurar el observer cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('searchModal');
+            if (modal) {
+                modalObserver.observe(modal, { attributes: true });
+            }
+        });
+    </script>
+</body>
+</html>

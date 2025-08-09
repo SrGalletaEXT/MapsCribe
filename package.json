@@ -1,7 +1,7 @@
 {
-  "name": "mapscribe",
+  "name": "games-library",
   "version": "0.1.0",
-  "description": "Desktop app to annotate videogame maps with pins, notes and callouts.",
+  "description": "Librería personal de videojuegos con búsqueda y gestión de colección.",
   "main": "main.js",
   "author": "Cristian",
   "license": "MIT",
